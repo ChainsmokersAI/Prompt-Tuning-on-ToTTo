@@ -1,0 +1,7 @@
+.ipynb_checkpoints/
+__pycache__/
+runs/
+totto_data/
+model/
+nohup.out
+
