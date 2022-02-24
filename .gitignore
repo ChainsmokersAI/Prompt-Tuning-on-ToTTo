@@ -2,6 +2,7 @@
 __pycache__/
 runs/
 totto_data/
+language_repo/
 model/
 nohup.out
 
