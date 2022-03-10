@@ -490,7 +490,9 @@ class GenerationMixin:
             return torch.ones(inputs.shape[:2], dtype=torch.long, device=self.device)
 
     def _prepare_encoder_decoder_kwargs_for_generation(
-        self, inputs_tensor: torch.Tensor, model_kwargs, model_input_name: Optional[str] = None
+        self, inputs_tensor: torch.Tensor, model_kwargs, model_input_name: Optional[str] = None,
+        #
+        prompt=None
     ) -> Dict[str, Any]:
         # 1. get encoder
         encoder = self.get_encoder()
@@ -507,6 +509,8 @@ class GenerationMixin:
         model_input_name = model_input_name if model_input_name is not None else self.main_input_name
         encoder_kwargs["return_dict"] = True
         encoder_kwargs[model_input_name] = inputs_tensor
+        #
+        encoder_kwargs['prompt']=prompt,
         model_kwargs["encoder_outputs"]: ModelOutput = encoder(**encoder_kwargs)
 
         return model_kwargs
@@ -843,6 +847,8 @@ class GenerationMixin:
         forced_eos_token_id: Optional[int] = None,
         remove_invalid_values: Optional[bool] = None,
         synced_gpus: Optional[bool] = False,
+        #
+        prompt=None,
         **model_kwargs,
     ) -> Union[GreedySearchOutput, SampleOutput, BeamSearchOutput, BeamSampleOutput, torch.LongTensor]:
         r"""
@@ -1100,8 +1106,14 @@ class GenerationMixin:
             # if model is encoder decoder encoder_outputs are created
             # and added to `model_kwargs`
             model_kwargs = self._prepare_encoder_decoder_kwargs_for_generation(
-                inputs_tensor, model_kwargs, model_input_name
+                inputs_tensor, model_kwargs, model_input_name,
+                #
+                prompt=prompt
             )
+        #
+        prompt_len=prompt.shape[1]
+        prompt_attention_mask=torch.ones(batch_size, prompt_len).to(model_kwargs['attention_mask'].device)
+        model_kwargs['attention_mask']=torch.cat([prompt_attention_mask, model_kwargs['attention_mask']], dim=1)
 
         # 4. Prepare `input_ids` which will be used for auto-regressive generation
         if self.config.is_encoder_decoder:
