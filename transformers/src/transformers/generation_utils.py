@@ -510,7 +510,7 @@ class GenerationMixin:
         encoder_kwargs["return_dict"] = True
         encoder_kwargs[model_input_name] = inputs_tensor
         #
-        encoder_kwargs['prompt']=prompt,
+        encoder_kwargs['prompt']=prompt
         model_kwargs["encoder_outputs"]: ModelOutput = encoder(**encoder_kwargs)
 
         return model_kwargs
@@ -1111,9 +1111,10 @@ class GenerationMixin:
                 prompt=prompt
             )
         #
-        prompt_len=prompt.shape[1]
-        prompt_attention_mask=torch.ones(batch_size, prompt_len).to(model_kwargs['attention_mask'].device)
-        model_kwargs['attention_mask']=torch.cat([prompt_attention_mask, model_kwargs['attention_mask']], dim=1)
+        if prompt is not None:
+            prompt_len=prompt.shape[1]
+            prompt_attention_mask=torch.ones(batch_size, prompt_len).to(model_kwargs['attention_mask'].device)
+            model_kwargs['attention_mask']=torch.cat([prompt_attention_mask, model_kwargs['attention_mask']], dim=1)
 
         # 4. Prepare `input_ids` which will be used for auto-regressive generation
         if self.config.is_encoder_decoder:
